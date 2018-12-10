@@ -15,8 +15,10 @@ License URI: http://www.opensource.org/licenses/gpl-license.php
 if ( ! defined('ABSPATH')) exit; // Exit if accessed directly
 
 if ( ! class_exists('WooCommerce_MyParcel')) :
-
-class WooCommerce_MyParcel {
+    /**
+    * @property WooCommerce_MyParcel_Export $export
+    */
+    class WooCommerce_MyParcel {
 
     public $version = '3.0.10';
     public $plugin_basename;

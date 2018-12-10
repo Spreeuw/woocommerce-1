@@ -398,13 +398,31 @@ class WooCommerce_MyParcel_Frontend {
             return false;
         }
 
-        $chosen_method = isset(WC()->session->chosen_shipping_methods[0]) ? WC()->session->chosen_shipping_methods[0] : '';
+//        $chosen_method = isset(WC()->session->chosen_shipping_methods[0]) ? WC()->session->chosen_shipping_methods[0] : '';
 
         // get package
         $packages = WC()->shipping->get_packages();
         $package = current($packages);
 
-        $shipping_method = WooCommerce_MyParcel()->export->get_shipping_method($chosen_method);
+        $shipping_methods = WC()->shipping->load_shipping_methods($package);
+
+        $shipping_classes = WooCommerce_MyParcel()->export_defaults['shipping_methods_package_types'];
+        $package_methods = $shipping_classes[1];
+
+        $settingMethods = $this->getMethodsFromString($package_methods);
+
+        $myParcelMethods = [];
+        /** @var WC_Shipping_Method $method */
+        foreach ($shipping_methods as $method) {
+
+            if (in_array($method->id, $settingMethods)) {
+                $myParcelMethods[] = $method->id;
+            }
+        }
+
+        return $myParcelMethods;
+/*
+        $shipping_method = WooCommerce_MyParcel()->export->get_shipping_method();
         if (empty($shipping_method)) {
             return false;
         }
@@ -418,7 +436,7 @@ class WooCommerce_MyParcel_Frontend {
             $found_shipping_classes
         );
 
-        return $highest_class;
+        return $highest_class;*/
     }
 
     public function order_review_fragments($fragments) {
@@ -598,6 +616,13 @@ class WooCommerce_MyParcel_Frontend {
         }
 
         return false;
+    }
+
+    private function getMethodsFromString($package_methods) {
+
+        // @todo parse flat:30 to flat
+
+        return ['flat', 'tablerateasfd'];
     }
 }
 

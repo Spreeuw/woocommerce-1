@@ -62,6 +62,11 @@ jQuery(function($) {
                         }
                     }
 
+                    console.log(shipping_class);
+                    console.log(shipping_method_class);
+                    console.log(MyParcel_Frontend.shipping_methods);
+
+
                     if (shipping_class && $.inArray(shipping_method_class, MyParcel_Frontend.shipping_methods) > -1) {
                         MyParcel_Frontend.updated_shipping_method = shipping_method_class;
                         MyParcel_Frontend.show_delivery_options();
@@ -75,6 +80,7 @@ jQuery(function($) {
                         var shipping_method_now = typeof shipping_method_class !== 'undefined' ? shipping_method_class : shipping_method;
                         MyParcel_Frontend.myparcel_updated_shipping_method = shipping_method_now;
                         MyParcel_Frontend.myparcel_selected_shipping_method = shipping_method_now;
+                        MyParcel.hideAllDeliveryOptions();
                     }
                 } else {
 
