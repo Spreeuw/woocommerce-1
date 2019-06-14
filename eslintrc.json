@@ -1,0 +1,15 @@
+{
+  "extends": "/Users/Edie/projects/myparcel/myparcel-core/dmp-standards/eslint/eslint.config.js",
+  "env": {
+    "jquery": true
+  },
+  "globals": {
+    "MyParcel": "writable",
+    "MyParcelConfig": "writable",
+    "wc_enhanced_select_params": "readonly",
+    "wc_myparcel": "readonly",
+    "wcmp_delivery_options": "readonly",
+    "wcmp_display_settings": "readonly",
+    "woocommerce_params": "readonly"
+  }
+}
