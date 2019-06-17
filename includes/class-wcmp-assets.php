@@ -41,8 +41,9 @@ class WooCommerce_MyParcel_Assets {
         wp_enqueue_script(
             'wc-myparcel-frontend',
             WooCommerce_MyParcel()->plugin_url() . '/assets/js/wcmp-frontend.js',
-            array('jquery', 'wc-myparcel'),
-            WC_MYPARCEL_VERSION
+            array('wc-myparcel'),
+            WC_MYPARCEL_VERSION,
+            true
         );
 
         wp_localize_script(
