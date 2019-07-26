@@ -437,84 +437,77 @@ class WooCommerce_MyParcel_Frontend {
     }
 
     private function get_checkout_config() {
+        $ageCheckIsSet          = isset(WooCommerce_MyParcel()->export_defaults['age_check']);
+
         $myParcelConfig = [
-
             "address" => [
-                "cc" => '',
+                "cc"         => '',
                 "postalCode" => '',
-                "number" => '',
-                "city" => ''
+                "number"     => '',
+                "city"       => '',
             ],
-            "txtWeekDays" => [
-                'Zondag',
-                'Maandag',
-                'Dinsdag',
-                'Woensdag',
-                'Donderdag',
-                'Vrijdag',
-                'Zaterdag'
-            ],
-            "config" => [
+            "config"  => [
                 "apiBaseUrl" => WooCommerce_MyParcel_Frontend_Settings::BASE_URL,
-                "carrier" => "1",
+                "carriers"   => "postnl",
 
-                "priceMorningDelivery" => $this->frontend_settings->get_price('morning'),
-                "priceNormalDelivery" => "",
-                "priceEveningDelivery" => $this->frontend_settings->get_price('evening'),
-                "priceSignature" => $this->frontend_settings->get_price('signature'),
-                "priceOnlyRecipient" => $this->frontend_settings->get_price('only_recipient'),
-                "pricePickup" => $this->frontend_settings->get_price('pickup'),
-                "pricePickupExpress" => $this->frontend_settings->get_price('pickup_express'),
+                "priceMorningDelivery"  => $this->frontend_settings->get_price('morning'),
+                "priceStandardDelivery" => "",
+                "priceEveningDelivery"  => $this->frontend_settings->get_price('evening'),
+                "priceSignature"        => $this->frontend_settings->get_price('signature'),
+                "priceOnlyRecipient"    => $this->frontend_settings->get_price('only_recipient'),
+                "pricePickup"           => $this->frontend_settings->get_price('pickup'),
+                "pricePickupExpress"    => $this->frontend_settings->get_price('pickup_express'),
 
-                "allowMondayDelivery" => $this->frontend_settings->is_enabled('saturday_cutoff'),
-                "allowMorningDelivery" => isset(WooCommerce_MyParcel()->export_defaults['age_check']) ? 0 : $this->frontend_settings->is_enabled('morning'),
-                "allowEveningDelivery" => isset(WooCommerce_MyParcel()->export_defaults['age_check']) ? 0 : $this->frontend_settings->is_enabled('evening'),
-                "allowSignature" => isset(WooCommerce_MyParcel()->export_defaults['age_check']) ? 0 : $this->frontend_settings->is_enabled('signature'),
-                "allowOnlyRecipient" => isset(WooCommerce_MyParcel()->export_defaults['age_check']) ? 0 : $this->frontend_settings->is_enabled('only_recipient'),
-                "allowPickupPoints" => $this->frontend_settings->is_enabled('pickup'),
-                "allowPickupExpress" => $this->frontend_settings->is_enabled('pickup_express'),
+                "allowDelivery"        => $this->frontend_settings->is_enabled('delivery'),
+                "allowMondayDelivery"  => $this->frontend_settings->is_enabled('saturday_cutoff'),
+                "allowMorningDelivery" => $ageCheckIsSet ? 0 : $this->frontend_settings->is_enabled('morning'),
+                "allowEveningDelivery" => $ageCheckIsSet ? 0 : $this->frontend_settings->is_enabled('evening'),
+                "allowSignature"       => $ageCheckIsSet ? 0 : $this->frontend_settings->is_enabled('signature'),
+                "allowOnlyRecipient"   => $ageCheckIsSet ? 0 : $this->frontend_settings->is_enabled('only_recipient'),
+                "allowPickupPoints"    => $this->frontend_settings->is_enabled('pickup'),
+                "allowPickupExpress"   => $this->frontend_settings->is_enabled('pickup_express'),
 
-                "dropOffDays" => $this->frontend_settings->get_dropoff_days(),
+                "dropOffDays"        => $this->frontend_settings->get_drop_off_days(),
                 "saturdayCutoffTime" => $this->frontend_settings->get_saturday_cutoff_time(),
-                "cutoffTime" => $this->frontend_settings->get_cutoff_time(),
-                "deliverydaysWindow" => $this->frontend_settings->get_deliverydays_window(),
-                "dropoffDelay" => $this->frontend_settings->get_dropoff_delay(),
+                "cutoffTime"         => $this->frontend_settings->get_cutoff_time(),
+                "deliveryDaysWindow" => $this->frontend_settings->get_deliverydays_window(),
+                "dropOffDelay"       => $this->frontend_settings->get_drop_off_delay(),
 
             ],
-            "textToTranslate" =>[
-                "deliveryTitle"=> __($this->frontend_settings->get_title('at_home_delivery'), 'woocommerce-myparcel'),
-                "deliveryMorningTitle" => __($this->frontend_settings->get_title('morning'),'woocommerce-myparcel'),
-                "deliveryStandardTitle" => __($this->frontend_settings->get_title('standard'),'woocommerce-myparcel'),
-                "deliveryEveningTitle" => __($this->frontend_settings->get_title('evening'),'woocommerce-myparcel'),
-                "signatureTitle"=> __($this->frontend_settings->get_title('signature'), 'woocommerce-myparcel'),
-                "onlyRecipientTitle"=> __($this->frontend_settings->get_title('only_recipient'), 'woocommerce-myparcel'),
-                "saturdayDeliveryTitle"=> __('saturday_delivery_title', 'woocommerce-myparcel'),
-                "pickupTitle"=> __($this->frontend_settings->get_title('pickup'), 'woocommerce-myparcel'),
+            "strings" => [
+                "deliveryTitle"         => __($this->frontend_settings->get_title('at_home_delivery'), 'woocommerce-myparcel'),
+                "deliveryMorningTitle"  => __($this->frontend_settings->get_title('morning'), 'woocommerce-myparcel'),
+                "deliveryStandardTitle" => __($this->frontend_settings->get_title('standard'), 'woocommerce-myparcel'),
+                "deliveryEveningTitle"  => __($this->frontend_settings->get_title('evening'), 'woocommerce-myparcel'),
+                "signatureTitle"        => __($this->frontend_settings->get_title('signature'), 'woocommerce-myparcel'),
+                "onlyRecipientTitle"    => __($this->frontend_settings->get_title('only_recipient'), 'woocommerce-myparcel'),
+                "saturdayDeliveryTitle" => __('saturday_delivery_title', 'woocommerce-myparcel'),
+                "pickupTitle"           => __($this->frontend_settings->get_title('pickup'), 'woocommerce-myparcel'),
                 "headerDeliveryOptions" => __($this->frontend_settings->get_title('header_delivery_options'), 'woocommerce-myparcel'),
 
-                "BEdeliveryTitle" => __($this->frontend_settings->get_title('belgium_at_home_delivery'), 'woocommerce-myparcel'),
+                "BEdeliveryTitle"         => __($this->frontend_settings->get_title('belgium_at_home_delivery'), 'woocommerce-myparcel'),
                 "BEdeliveryStandardTitle" => __($this->frontend_settings->get_title('belgium_standard'), 'woocommerce-myparcel'),
 
-                "addressNotFound" => __('Address details are not entered', 'woocommerce-myparcel'),
-                "pickUpFrom" =>__('Pick up from', 'woocommerce-myparcel'),
-                "openingHours" =>__('Opening hours', 'woocommerce-myparcel'),
-                "closed" =>__('Closed', 'woocommerce-myparcel'),
-                "postcode" =>__('Postcode', 'woocommerce-myparcel'),
-                "houseNumber" =>__('House number', 'woocommerce-myparcel'),
-                "city"=>__('City', 'woocommerce-myparcel'),
-                "retry" =>__('Retry', 'woocommerce-myparcel'),
-                "wrongHouseNumberPostcode" =>__('House number/postcode combination unknown', 'woocommerce-myparcel'),
-                "quickDelivery"=>__('Deliver as quickly as possible', 'woocommerce-myparcel'),
-                "again" =>__('Again', 'woocommerce-myparcel'),
+                "addressNotFound"          => __('Address details are not entered', 'woocommerce-myparcel'),
+                "pickUpFrom"               => __('Pick up from', 'woocommerce-myparcel'),
+                "openingHours"             => __('Opening hours', 'woocommerce-myparcel'),
+                "closed"                   => __('Closed', 'woocommerce-myparcel'),
+                "postcode"                 => __('Postcode', 'woocommerce-myparcel'),
+                "houseNumber"              => __('House number', 'woocommerce-myparcel'),
+                "city"                     => __('City', 'woocommerce-myparcel'),
+                "retry"                    => __('Retry', 'woocommerce-myparcel'),
+                "wrongHouseNumberPostcode" => __('House number/postcode combination unknown', 'woocommerce-myparcel'),
+                "quickDelivery"            => __('Deliver as quickly as possible', 'woocommerce-myparcel'),
+                "again"                    => __('Again', 'woocommerce-myparcel'),
 
-                'sunday'=> __('Sunday', 'woocommerce-myparcel'),
-                'monday'=> __('Monday', 'woocommerce-myparcel'),
-                'tuesday'=> __('Tuesday', 'woocommerce-myparcel'),
-                'wednesday'=> __('Wednesday', 'woocommerce-myparcel'),
-                'thursday'=> __('Thursday', 'woocommerce-myparcel'),
-                'friday'=> __('Friday', 'woocommerce-myparcel'),
-                'saturday'=> __('Saturday', 'woocommerce-myparcel')
-            ]
+                'sunday'    => __('Sunday', 'woocommerce-myparcel'),
+                'monday'    => __('Monday', 'woocommerce-myparcel'),
+                'tuesday'   => __('Tuesday', 'woocommerce-myparcel'),
+                'wednesday' => __('Wednesday', 'woocommerce-myparcel'),
+                'thursday'  => __('Thursday', 'woocommerce-myparcel'),
+                'friday'    => __('Friday', 'woocommerce-myparcel'),
+                'saturday'  => __('Saturday', 'woocommerce-myparcel'),
+            ],
         ];
 
         return json_encode($myParcelConfig);

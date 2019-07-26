@@ -89,7 +89,7 @@ class WooCommerce_MyParcel_Frontend_Settings {
     /**
      * @return mixed
      */
-    public function get_dropoff_delay() {
+    public function get_drop_off_delay() {
         if (isset(self::$settings['dropoff_delay'])) {
             return self::$settings['dropoff_delay'];
         }
@@ -111,7 +111,7 @@ class WooCommerce_MyParcel_Frontend_Settings {
     /**
      * @return string
      */
-    public function get_dropoff_days() {
+    public function get_drop_off_days() {
         return implode(";", self::$settings['dropoff_days']);
     }
 
