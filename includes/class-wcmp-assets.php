@@ -24,7 +24,8 @@ class WooCommerce_MyParcel_Assets {
                 'wcmp-checkout-fields',
                 WooCommerce_MyParcel()->plugin_url() . '/assets/js/wcmp-checkout-fields.js',
                 array('jquery', 'wc-checkout'),
-                WC_MYPARCEL_VERSION
+                WC_MYPARCEL_VERSION,
+            true
             );
         }
 
@@ -34,8 +35,9 @@ class WooCommerce_MyParcel_Assets {
         wp_enqueue_script(
             'wc-myparcel',
             WooCommerce_MyParcel()->plugin_url() . '/assets/js/myparcel.js',
-            array('jquery'),
-            WC_MYPARCEL_VERSION
+            array(),
+            WC_MYPARCEL_VERSION,
+            true
         );
 
         wp_enqueue_script(

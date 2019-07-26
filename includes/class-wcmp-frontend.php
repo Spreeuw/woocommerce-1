@@ -182,7 +182,7 @@ class WooCommerce_MyParcel_Frontend {
 
         wp_localize_script(
             'wc-myparcel',
-            'wcmp_config',
+            'MyParcelConfig',
             $this->get_checkout_config()
         );
     }
