@@ -88,7 +88,7 @@ class WCMP_Upgrade_Migration_v4_0_0 extends WCMP_Upgrade_Migration
             "woocommerce_myparcel_checkout_settings"        => $this->newCheckoutSettings,
             "woocommerce_myparcel_export_defaults_settings" => $this->newExportDefaultsSettings,
             "woocommerce_myparcel_general_settings"         => $this->newGeneralSettings,
-            "woocommerce_myparcel_postnl_settings"           => $this->newPostnlSettings,
+            "woocommerce_myparcel_postnl_settings"          => $this->newPostnlSettings,
         ];
     }
 
@@ -117,11 +117,11 @@ class WCMP_Upgrade_Migration_v4_0_0 extends WCMP_Upgrade_Migration
     private function migrateExportDefaultsSettings(): void
     {
         // Migrate array value of shipping_methods_package_types
-        $this->newExportDefaultsSettings[WCMP_Settings::SETTING_SHIPPING_METHODS_PACKAGE_TYPES] =
-            $this->migrateSettings(
-                self::getPackageTypesMap(),
-                $this->newExportDefaultsSettings[WCMP_Settings::SETTING_SHIPPING_METHODS_PACKAGE_TYPES]
-            );
+//        $this->newExportDefaultsSettings[WCMP_Settings::SETTING_SHIPPING_METHODS_PACKAGE_TYPES] =
+//            $this->migrateSettings(
+//                self::getPackageTypesMap(),
+//                $this->newExportDefaultsSettings[WCMP_Settings::SETTING_SHIPPING_METHODS_PACKAGE_TYPES]
+//            );
 
         $this->newPostnlSettings = $this->migrateSettings(
             self::getExportDefaultsPostnlMap(),
@@ -152,17 +152,18 @@ class WCMP_Upgrade_Migration_v4_0_0 extends WCMP_Upgrade_Migration
         $postnl = WCMP_Settings::SETTINGS_POSTNL;
 
         return [
-            "dropoff_days"        => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_DROP_OFF_DAYS,
-            "cutoff_time"         => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_CUTOFF_TIME,
-            "dropoff_delay"       => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_DROP_OFF_DELAY,
-            "deliverydays_window" => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_DELIVERY_DAYS_WINDOW,
-            "signature_enabled"   => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_SIGNATURE_ENABLED,
-            "signature_title"     => "{$postnl}_" . WCMP_Settings::SETTING_SIGNATURE_TITLE,
-            "signature_fee"       => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_SIGNATURE_FEE,
-            "delivery_enabled"    => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_DELIVERY_ENABLED,
-            "pickup_enabled"      => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_PICKUP_ENABLED,
-            "pickup_title"        => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_PICKUP_TITLE,
-            "pickup_fee"          => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_PICKUP_FEE,
+            "dropoff_days"           => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_DROP_OFF_DAYS,
+            "cutoff_time"            => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_CUTOFF_TIME,
+            "dropoff_delay"          => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_DROP_OFF_DELAY,
+            "deliverydays_window"    => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_DELIVERY_DAYS_WINDOW,
+            "signature_enabled"      => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_SIGNATURE_ENABLED,
+            "only_recipient_enabled" => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_ONLY_RECIPIENT_ENABLED,
+            "signature_title"        => "{$postnl}_" . WCMP_Settings::SETTING_SIGNATURE_TITLE,
+            "signature_fee"          => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_SIGNATURE_FEE,
+            "delivery_enabled"       => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_DELIVERY_ENABLED,
+            "pickup_enabled"         => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_PICKUP_ENABLED,
+            "pickup_title"           => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_PICKUP_TITLE,
+            "pickup_fee"             => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_PICKUP_FEE,
         ];
     }
 
@@ -172,8 +173,8 @@ class WCMP_Upgrade_Migration_v4_0_0 extends WCMP_Upgrade_Migration
     private static function getCheckoutMap(): array
     {
         return [
-            "checkout_position"   => WCMP_Settings::SETTING_DELIVERY_OPTIONS_POSITION,
-            "custom_css"          => WCMP_Settings::SETTING_DELIVERY_OPTIONS_CUSTOM_CSS,
+            "checkout_position" => WCMP_Settings::SETTING_DELIVERY_OPTIONS_POSITION,
+            "custom_css"        => WCMP_Settings::SETTING_DELIVERY_OPTIONS_CUSTOM_CSS,
             "myparcel_checkout" => WCMP_Settings::SETTING_DELIVERY_OPTIONS_ENABLED,
         ];
     }
@@ -200,7 +201,12 @@ class WCMP_Upgrade_Migration_v4_0_0 extends WCMP_Upgrade_Migration
 
         return [
             "insured"   => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_DEFAULT_EXPORT_INSURED,
+            "insured_amount"   => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_DEFAULT_EXPORT_INSURED_AMOUNT,
             "signature" => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_DEFAULT_EXPORT_SIGNATURE,
+            "only_recipient" => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_DEFAULT_EXPORT_ONLY_RECIPIENT,
+            "large_format" => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_DEFAULT_EXPORT_LARGE_FORMAT,
+            "age_check" => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_DEFAULT_EXPORT_AGE_CHECK,
+            "return" => "{$postnl}_" . WCMP_Settings::SETTING_CARRIER_DEFAULT_EXPORT_RETURN,
         ];
     }
 
@@ -208,6 +214,9 @@ class WCMP_Upgrade_Migration_v4_0_0 extends WCMP_Upgrade_Migration
     {
         return [
             1 => AbstractConsignment::PACKAGE_TYPE_PACKAGE_NAME,
+            2 => AbstractConsignment::PACKAGE_TYPE_MAILBOX_NAME,
+            3 => AbstractConsignment::PACKAGE_TYPE_LETTER,
+            4 => AbstractConsignment::PACKAGE_TYPE_DIGITAL_STAMP,
         ];
     }
 }
