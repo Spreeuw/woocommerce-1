@@ -12,7 +12,6 @@ MyParcel = {
     DELIVERY_NORMAL:         'standard',
     DELIVERY_EVENING:        'avond',
     DELIVERY_PICKUP:         'retail',
-    DELIVERY_PICKUP_EXPRESS: 'retailexpress',
     DELIVERY_SIGNATURE:      0,
     DELIVERY_ONLY_RECIPIENT: 0,
 
@@ -195,8 +194,6 @@ MyParcel = {
             MyParcel.defaultCheckCheckbox('method-myparcel-normal');
         });
 
-        // jQuery('#mypa-pickup-express').hide();  /* todo: move */
-
         jQuery('#mypa-pickup-delivery, #mypa-pickup-location').on('change', function(e) {
             MyParcel.setCurrentLocation();
             MyParcel.toggleDeliveryOptions();
@@ -319,17 +316,8 @@ MyParcel = {
          *
          */
         if (jQuery('#mypa-pickup-delivery').prop('checked') || jQuery('#mypa-pickup-selector').prop('checked')) {
-            /**
-             * Early morning pickup
-             */
-            if (jQuery('#mypa-pickup-express-selector').prop('checked')) {
-                jQuery('#s_method_myparcel_pickup_express').click();
-                MyParcel.addPickupToExternalInput(MyParcel.DELIVERY_PICKUP_EXPRESS);
-                MyParcel.addStyleToPrice('#mypa-pickup-express-price');
-                return;
-            } else {
-                MyParcel.addStyleToPrice('#mypa-pickup-price');
-            }
+
+            MyParcel.addStyleToPrice('#mypa-pickup-price');
 
             jQuery('#s_method_myparcel_pickup').click();
             MyParcel.addPickupToExternalInput(MyParcel.DELIVERY_PICKUP);
@@ -416,14 +404,6 @@ MyParcel = {
     toggleDeliveryOptions: function() {
         var isPickup = jQuery('#mypa-pickup-delivery').is(':checked');
         jQuery('#mypa-pickup-selector').prop('checked', true);
-
-        if (isPickup && this.currentLocation.price_comment === MyParcel.DELIVERY_PICKUP_EXPRESS && this.data.config.allowPickupExpress) {
-            jQuery('#mypa-pickup-express-price').html(MyParcel.getPriceHtml(this.data.config.pricePickupExpress));
-            jQuery('#mypa-pickup-express').show();
-        } else {
-            jQuery('#mypa-pickup-express-selector').attr("checked", false);
-            jQuery('#mypa-pickup-express').hide();
-        }
     },
 
     /*
@@ -652,7 +632,7 @@ MyParcel = {
             jQuery('#mypa-pickup-location-selector').hide();
         }
 
-        jQuery('#mypa-pickup-options, #mypa-pickup, #mypa-pickup-express').hide();
+        jQuery('#mypa-pickup-options, #mypa-pickup').hide();
     },
 
     /*
@@ -900,6 +880,21 @@ MyParcel = {
         return result;
     },
 
+     /*
+     * saturdayCutoffTime
+     *
+     * Check if it is Saturday today, then use the Saturday CutoffTime
+     *
+     */
+    saturdayCutoffTime: function() {
+        var date = new Date();
+        var numberOfDay = date.getDay();
+
+        if (numberOfDay === 6) {
+            this.data.config.cutoffTime = this.data.config.saturdayCutoffTime;
+        }
+    },
+
     /*
      * callDeliveryOptions
      *
@@ -912,6 +907,7 @@ MyParcel = {
         MyParcel.clearPickUpLocations();
         MyParcel.hideDelivery();
         MyParcel.setAddressFromInputFields();
+        MyParcel.saturdayCutoffTime();
 
         // Hide PostNL field if there is no address entered
         if (MyParcel.data.address.postalCode == '' || MyParcel.data.address.number == '') {

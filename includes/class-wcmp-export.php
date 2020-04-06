@@ -16,8 +16,13 @@ class WooCommerce_MyParcel_Export {
     const LETTER          = 3;
     const DIGITAL_STAMP   = 4;
 
+    // Delivery types
+    const PICKUP          = 4;
     // Maximum characters length of item description.
     const DESCRIPTION_MAX_LENGTH = 50;
+
+    // Maximum items for world shipments
+    const MAX_WORLD_SHIPMENT_ITEMS = 5;
 
     public $order_id;
     public $success;
@@ -463,21 +468,26 @@ class WooCommerce_MyParcel_Export {
 
             $shipping_country = WCX_Order::get_prop($order, 'shipping_country');
             if ($this->is_world_shipment_country($shipping_country)) {
-                $customs_declaration = $this->get_customs_declaration($order);
+                $customs_declaration             = $this->get_customs_declaration($order);
                 $shipment['customs_declaration'] = $customs_declaration;
                 $shipment['physical_properties'] = array(
                     'weight' => $customs_declaration['weight'],
                 );
             }
 
-            if ($shipment['options']['package_type'] == self::DIGITAL_STAMP ) {
+            if ($shipment['options']['package_type'] == self::DIGITAL_STAMP) {
+                $digital_stamp_option_weight     = (int) $shipment['options']['weight'];
+                $shipment_weight                 = (int) round($this->get_parcel_weight($order) * 1000);
                 $shipment['physical_properties'] = array(
-                    'weight' => (int) round($this->get_parcel_weight($order) * 1000)
+                    'weight' =>
+                        ($digital_stamp_option_weight ? $digital_stamp_option_weight :
+                            $shipment_weight)
                 );
+
                 unset($shipment['options']['weight']);
             }
-            
-            if ($shipment['options']['package_type'] == self::MAILBOX_PACKAGE ) {
+
+            if ($shipment['options']['package_type'] == self::MAILBOX_PACKAGE) {
                 unset($shipment['options']['weight']);
             }
 
@@ -686,6 +696,7 @@ class WooCommerce_MyParcel_Export {
         // use shipment options from order when available
         $shipment_options = WCX_Order::get_meta($order, '_myparcel_shipment_options');
         $package_type = $this->get_package_type_for_order($order);
+        $delivery_type = $this->get_delivery_type($order);
 
         if ( ! empty($shipment_options)) {
             $empty_defaults = array(
@@ -714,7 +725,7 @@ class WooCommerce_MyParcel_Export {
                 'package_type' => $package_type,
                 'only_recipient' => (isset(WooCommerce_MyParcel()->export_defaults['only_recipient'])) ? 1 : 0,
                 'signature' => (isset(WooCommerce_MyParcel()->export_defaults['signature'])) ? 1 : 0,
-                'return' => (isset(WooCommerce_MyParcel()->export_defaults['return']) && (!$package_type == 4 || !$package_type == 5)) ? 1 : 0,
+                'return' => (isset(WooCommerce_MyParcel()->export_defaults['return']) && $delivery_type != self::PICKUP) ? 1 : 0,
                 'large_format' => (isset(WooCommerce_MyParcel()->export_defaults['large_format'])) ? 1 : 0,
                 'label_description' => $description,
                 'insured_amount' => $insured_amount,
@@ -763,7 +774,7 @@ class WooCommerce_MyParcel_Export {
             $options['only_recipient'] = $age_check_options[2];
         }
 
-        // Options for Pickup and Pickup express delivery types:
+        // Options for Pickup delivery types:
         // always enable signature on receipt
         if ($this->is_pickup($order, $myparcel_delivery_options)) {
             $options['signature'] = 1;
@@ -823,19 +834,25 @@ class WooCommerce_MyParcel_Export {
     *
     * @return false|string
     */
-    private function get_next_delivery_day($timestamp) {
-        $weekDay = date('w', $timestamp);
-        $new_timestamp = strtotime( '+1 day', $timestamp );
+    private function get_next_delivery_day($timestamp)
+    {
+        $weekDay       = date('w', $timestamp);
+        $new_timestamp = strtotime('+1 day', $timestamp);
 
-        if ($weekDay == 0 || $weekDay == 1 || $new_timestamp < time() ) {
-            $new_timestamp = $this->get_next_delivery_day( $new_timestamp );
+        if ($new_timestamp < time()) {
+            $new_timestamp = strtotime('+1 day', 'now');
+            $weekDay       = date('w', $new_timestamp);
+        }
+
+        if ($weekDay == 0 || $weekDay == 1) {
+            $new_timestamp = $this->get_next_delivery_day($new_timestamp);
         }
 
         return $new_timestamp;
     }
 
-    public function get_customs_declaration($order ) {
-        $invoice = $this->get_invoice_number($order);
+    public function get_customs_declaration($order) {
+        $invoice  = $this->get_invoice_number($order);
         $contents = (int) ((isset(WooCommerce_MyParcel()->export_defaults['package_contents']))
             ? WooCommerce_MyParcel()->export_defaults['package_contents']
             : 1);
@@ -848,6 +865,27 @@ class WooCommerce_MyParcel_Export {
         // Country (=shop base)
         $country = WC()->countries->get_base_country();
 
+        $items = $this->get_item_data($order, $default_hs_code, $country);
+        // Select first 5 arrays when you have more than 5 items
+        if (count($items) > self::MAX_WORLD_SHIPMENT_ITEMS) {
+            $items = array_slice($items, 0, 5);
+        }
+
+        // Get the total weight of the package
+        $weight = (int) round($this->get_parcel_weight($order) * 1000);
+
+        return compact('weight', 'invoice', 'contents', 'items');
+    }
+
+    /**
+     * @param $order
+     * @param $default_hs_code
+     * @param $country
+     *
+     * @return array
+     */
+    public function get_item_data($order, $default_hs_code, $country)
+    {
         $items = array();
         foreach ($order->get_items() as $item_id => $item) {
             $product = $order->get_product_from_item($item);
@@ -855,7 +893,7 @@ class WooCommerce_MyParcel_Export {
                 // GitHub issue https://github.com/myparcelnl/woocommerce/issues/190
                 // Description cut after 50 chars
                 $description = $item['name'];
-                if (strlen($description) >= self::DESCRIPTION_MAX_LENGTH){
+                if (strlen($description) >= self::DESCRIPTION_MAX_LENGTH) {
                     $description = substr($item['name'], 0, 47) . '...';
                 }
                 // Amount
@@ -864,7 +902,7 @@ class WooCommerce_MyParcel_Export {
                 $weight = (int) round($this->get_item_weight_kg($item, $order) * 1000);
                 // Item value (in cents)
                 $item_value = array(
-                    'amount' => (int) round(($item['line_total'] + $item['line_tax']) * 100),
+                    'amount'   => (int) round(($item['line_total'] + $item['line_tax']) * 100),
                     'currency' => WCX_Order::get_prop($order, 'currency'),
                 );
                 // Classification / HS Code
@@ -872,15 +910,12 @@ class WooCommerce_MyParcel_Export {
                 if (empty($classification)) {
                     $classification = $default_hs_code;
                 }
-
                 // add item to item list
-                $items[] = compact('description', 'amount', 'weight', 'item_value', 'classification', 'country');
+                $items [] = compact('description', 'amount', 'weight', 'item_value', 'classification', 'country');
             }
         }
-        // Get the total weight of the package
-        $weight = (int) round($this->get_parcel_weight($order) * 1000);
 
-        return compact('weight', 'invoice', 'contents', 'items');
+        return $items;
     }
 
     public function validate_shipments($shipments, $output_errors = true) {
@@ -1055,7 +1090,7 @@ class WooCommerce_MyParcel_Export {
             }
         }
 
-        // always parcel for Pickup and Pickup express delivery types.
+        // always parcel for Pickup delivery types.
         if ($this->is_pickup($order)) {
             $package_type = self::PACKAGE;
         }
@@ -1275,7 +1310,7 @@ class WooCommerce_MyParcel_Export {
                 $product_weight = $weight;
             break;
         }
-        
+
         $item_weight = (float) $product_weight * (int) $item['qty'];
 
         return $item_weight;
@@ -1291,7 +1326,7 @@ class WooCommerce_MyParcel_Export {
             $myparcel_delivery_options = WCX_Order::get_meta($order, '_myparcel_delivery_options');
         }
 
-        $pickup_types = array('retail', 'retailexpress');
+        $pickup_types = array('retail');
         if ( ! empty($myparcel_delivery_options['price_comment']) && in_array($myparcel_delivery_options['price_comment'],$pickup_types)) {
             return $myparcel_delivery_options;
         }
@@ -1322,7 +1357,6 @@ class WooCommerce_MyParcel_Export {
             'standard' => 2, // 'default in JS API'
             'avond' => 3,
             'retail' => 4, // 'pickup'
-            'retailexpress' => 5, // 'pickup_express'
         );
 
         if (empty($myparcel_delivery_options)) {
@@ -1332,7 +1366,7 @@ class WooCommerce_MyParcel_Export {
         // standard = default, overwrite if options found
         $delivery_type = 'standard';
         if ( ! empty($myparcel_delivery_options)) {
-            // pickup & pickup express store the delivery type in the delivery options,
+            // pickup store the delivery type in the delivery options,
             // morning & night store it in the time data (...)
             if (empty($myparcel_delivery_options['price_comment']) && ! empty($myparcel_delivery_options['time'])) {
                 // check if we have a price_comment in the time option
@@ -1371,7 +1405,7 @@ class WooCommerce_MyParcel_Export {
         $delivery_type = $this->get_delivery_type($order, $myparcel_delivery_options);
 
         $shipping_country = WCX_Order::get_prop($order, 'shipping_country');
-        
+
         if ( ! empty($myparcel_delivery_options) && ! in_array($delivery_type, array(1, 3)) && $shipping_country == 'NL' ) {
 
             $age_check = $options['age_check'] = 1;
@@ -1645,7 +1679,7 @@ class WooCommerce_MyParcel_Export {
     }
 
     public function is_world_shipment_country($country_code) {
-        $world_shipment_countries = array('AF','AQ','DZ','VI','AO','AG','AR','AM','AW','AU','AZ','BS','BH','BD','BB','BZ','BJ','BM','BT','BO','BW','BR','VG','BN','BF','BI','KH','CA','KY','CF','CL','CN','CO','KM','CG','CD','CR','CU','DJ','DM','DO','EC','EG','SV','GQ','ER','ET','FK','FJ','PH','GB','GF','PF','GA','GM','GE','GH','GD','GP','GT','GN','GW','GY','HT','HN','HK','IN','ID','IS','IQ','IR','IL','CI','JM','JP','YE','JO','CV','CM','KZ','KE','KG','KI','KW','LA','LS','LB','LR','LY','MO','MG','MW','MV','MY','ML','MA','MQ','MR','MU','MX','MN','MS','MZ','MM','NA','NR','NP','NI','NC','NZ','NE','NG','KP','UZ','OM','TL','PK','PA','PG','PY','PE','PN','PR','QA','RE','RU','RW','KN','LC','VC','PM','WS','ST','SA','SN','SC','SL','SG','SO','LK','SD','SR','SZ','SY','TJ','TW','TZ','TH','TG','TO','TT','TD','TN','TM','TC','TV','UG','UY','VU','VE','AE','US','VN','ZM','ZW','ZA','KR','AN','BQ','CW','SX','XK','IM','MT','CY','CH','TR','NO');
+        $world_shipment_countries = array('AF','AQ','DZ','VI','AO','AG','AR','AM','AW','AU','AZ','BS','BH','BD','BB','BZ','BJ','BM','BT','BO','BW','BR','VG','BN','BF','BI','KH','CA','KY','CF','CL','CN','CO','KM','CG','CD','CR','CU','DJ','DM','DO','EC','EG','SV','GQ','ER','ET','FK','FJ','PH','GB','GF','PF','GA','GM','GE','GH','GD','GP','GT','GN','GW','GY','HT','HN','HK','IN','ID','IS','IQ','IR','IL','CI','JM','JP','YE','JO','CV','CM','KZ','KE','KG','KI','KW','LA','LS','LB','LR','LY','MO','MG','MW','MV','MY','ML','MA','MQ','MR','MU','MX','MN','MS','MZ','MM','NA','NR','NP','NI','NC','NZ','NE','NG','KP','UZ','OM','TL','PK','PA','PG','PY','PE','PN','PR','QA','RE','RU','RW','KN','LC','VC','PM','WS','ST','SA','SN','SC','SL','SG','SO','LK','SD','SR','SZ','SY','TJ','TW','TZ','TH','TG','TO','TT','TD','TN','TM','TC','TV','UG','UY','VU','VE','AE','US','VN','ZM','ZW','ZA','KR','AN','BQ','CW','SX','XK','IM','MT','CY','CH','TR','NO','HR');
 
         return in_array($country_code, $world_shipment_countries);
     }

@@ -303,19 +303,13 @@ class WooCommerce_MyParcel_Frontend {
                 }
             }
 
-            /* Fees for pickup & pickup express */
+            /* Fees for pickup */
             if (isset($delivery_options['price_comment'])) {
                 switch($delivery_options['price_comment']) {
                     case 'retail':
                         if ( ! empty(WooCommerce_MyParcel()->checkout_settings['pickup_fee'])) {
                             $fee = WooCommerce_MyParcel()->checkout_settings['pickup_fee'];
                             $fee_name = __('PostNL pickup', 'woocommerce-myparcel');
-                        }
-                    break;
-                    case 'retailexpress':
-                        if ( ! empty(WooCommerce_MyParcel()->checkout_settings['pickup_express_fee'])) {
-                            $fee = WooCommerce_MyParcel()->checkout_settings['pickup_express_fee'];
-                            $fee_name = __('PostNL Pickup Express', 'woocommerce-myparcel');
                         }
                     break;
                 }
@@ -398,11 +392,11 @@ class WooCommerce_MyParcel_Frontend {
             return false;
         }
 
-        $chosen_method = isset(WC()->session->chosen_shipping_methods[0]) ? WC()->session->chosen_shipping_methods[0] : '';
+        $chosen_method = WC()->session->get('chosen_shipping_methods')[0] ?? '';
 
         // get package
-        $packages = WC()->shipping->get_packages();
-        $package = current($packages);
+        $packages = WC()->cart->get_shipping_packages();
+        $package  = current($packages);
 
         $shipping_method = WooCommerce_MyParcel()->export->get_shipping_method($chosen_method);
         if (empty($shipping_method)) {
@@ -464,7 +458,6 @@ class WooCommerce_MyParcel_Frontend {
                 "priceSignature" => $this->frontend_settings->get_price('signature'),
                 "priceOnlyRecipient" => $this->frontend_settings->get_price('only_recipient'),
                 "pricePickup" => $this->frontend_settings->get_price('pickup'),
-                "pricePickupExpress" => $this->frontend_settings->get_price('pickup_express'),
 
                 "allowMondayDelivery" => $this->frontend_settings->is_enabled('saturday_cutoff'),
                 "allowMorningDelivery" => isset(WooCommerce_MyParcel()->export_defaults['age_check']) ? 0 : $this->frontend_settings->is_enabled('morning'),
@@ -472,7 +465,6 @@ class WooCommerce_MyParcel_Frontend {
                 "allowSignature" => isset(WooCommerce_MyParcel()->export_defaults['age_check']) ? 0 : $this->frontend_settings->is_enabled('signature'),
                 "allowOnlyRecipient" => isset(WooCommerce_MyParcel()->export_defaults['age_check']) ? 0 : $this->frontend_settings->is_enabled('only_recipient'),
                 "allowPickupPoints" => $this->frontend_settings->is_enabled('pickup'),
-                "allowPickupExpress" => $this->frontend_settings->is_enabled('pickup_express'),
 
                 "dropOffDays" => $this->frontend_settings->get_dropoff_days(),
                 "saturdayCutoffTime" => $this->frontend_settings->get_saturday_cutoff_time(),

@@ -32,6 +32,9 @@ class WooCommerce_MyParcel_Admin {
         // Add barcode in order grid
         add_filter('manage_edit-shop_order_columns', array($this, 'barcode_add_new_order_admin_list_column'), 10, 1);
         add_action('manage_shop_order_posts_custom_column', array($this, 'barcode_add_new_order_admin_list_column_content'), 10, 2);
+
+        // Enables to search for shipment details in the order grid
+        add_filter('woocommerce_shop_order_search_fields', array($this, 'woocommerce_search_order_grid'));
     }
 
     public function order_list_shipment_options($order, $hide = true) {
@@ -488,9 +491,6 @@ class WooCommerce_MyParcel_Admin {
                 case 'retail':
                     $title = __('PostNL Pickup', 'woocommerce-myparcel');
                 break;
-                case 'retailexpress':
-                    $title = __('PostNL Pickup Express', 'woocommerce-myparcel');
-                break;
             }
 
             echo "<div class='pickup-location'><strong>{$title}: </strong>{$pickup['location']}, {$pickup['street']} {$pickup['number']}, {$pickup['postal_code']} {$pickup['city']}</div>";
@@ -622,7 +622,7 @@ class WooCommerce_MyParcel_Admin {
                + array('barcode' => 'Barcode')
                + array_slice($columns, 6, null, true);
     }
-    
+
     /**
      * @param $column
      */
@@ -655,6 +655,18 @@ class WooCommerce_MyParcel_Admin {
         }
 
         return $barcode;
+    }
+
+    /**
+     * @param $search_fields
+     *
+     * @return array
+     */
+    public function woocommerce_search_order_grid($search_fields)
+    {
+        $search_fields[] = '_myparcel_shipments';
+
+        return $search_fields;
     }
 
 }
