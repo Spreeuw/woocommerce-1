@@ -164,10 +164,12 @@ class WCMP_Export_Consignments
     public function getHsCode(WC_Product $product): int
     {
         $defaultHsCode = $this->getSetting(WCMP_Settings::SETTING_HS_CODE);
+        error_log("default: " . $defaultHsCode);
         $productHsCode = WCX_Product::get_meta($product, WCMP_Admin::META_HS_CODE, true);
+        error_log("product: ". $productHsCode);
 
         $hsCode = $productHsCode ? $productHsCode : $defaultHsCode;
-
+        error_log("hs code: " . $hsCode);
         if (! $hsCode) {
             throw new ErrorException(__("No HS code found in MyParcel settings", "woocommerce-myparcel"));
         }
@@ -185,7 +187,7 @@ class WCMP_Export_Consignments
         $defaultCountryOfOrigin = $this->getSetting(WCMP_Settings::SETTING_COUNTRY_OF_ORIGIN);
         $productCountryOfOrigin = WCX_Product::get_meta($product, WCMP_Admin::META_COUNTRY_OF_ORIGIN, true);
 
-        $countryOfOrigin = getPriorityOrigin($defaultCountryOfOrigin, $productCountryOfOrigin);
+        $countryOfOrigin = $this->getPriorityOrigin($defaultCountryOfOrigin, $productCountryOfOrigin);
 
         return (string) $countryOfOrigin;
     }
@@ -204,7 +206,7 @@ class WCMP_Export_Consignments
 
         if (! $defaultCountryOfOrigin) {
             if (! $productCountryOfOrigin) {
-                return WC()->countries->baseCountry() ?? 'NL';
+                return WC()->countries->get_base_country() ?? 'NL';
             }
         }
 
@@ -310,7 +312,7 @@ class WCMP_Export_Consignments
      */
     private function getTotalPackageWeight(): int
     {
-        return $this->order->get_meta(WCMP_Admin::META_ORDER_WEIGHT);
+        return (int) $this->order->get_meta(WCMP_Admin::META_ORDER_WEIGHT);
     }
 
     /**
